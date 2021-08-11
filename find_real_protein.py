@@ -5,6 +5,10 @@ def list_to_string(lst):
     return string
 
 
+def merge(d1, d2):
+    return d2.update(d1)
+
+
 amino_acids = {'F': ['UUU', 'UUC'],
                'L': ['UUA', 'UUG', 'CUU', 'CUA', 'CUG', 'CUC'],
                'I': ['AUU', 'AUC', 'AUA'],
@@ -70,22 +74,31 @@ def find_real_protein(x):
             lengths.append(count)
             count = 0
 
-    real_proteins = []
+    real_proteins = {}
     list_to_string(protein_seq)
     for i in range(0, len(end_indices)):
         pro_start_index = end_indices[i] - lengths[i]
         seq_length = lengths[i]
         pro_end_index = end_indices[i]
-        dna_start_index = (pro_start_index * 3 + start - 1)
-        dna_stop_index = (pro_end_index * 3 + start - 1)
+        dna_start_index = (pro_start_index * 3 + x)
+        dna_stop_index = (pro_end_index * 3 + x)
         p = (list_to_string(protein_seq[pro_start_index:pro_end_index]), '(', str(seq_length),
-             ' characters long at ', str(dna_start_index), ', ', str(dna_stop_index), '), \n')
+             ' characters long at ', str(dna_start_index), ', ', str(dna_stop_index), ')')
         protein = ''.join(p)
+        real_proteins[dna_start_index] = protein
 
-    return protein
+    return real_proteins
 
+
+real_proteins_dict = {}
+rpd_sorted = sorted(real_proteins_dict)
+for start in range(0, 3):
+    merge(find_real_protein(start), real_proteins_dict)
+
+rpd_sorted = sorted(real_proteins_dict)
 
 all_real_proteins = ''
-for start in range(0, 3):
-    all_real_proteins += find_real_protein(start)
-print('The real protein sequences are\n', all_real_proteins)
+for key in rpd_sorted:
+    all_real_proteins += (real_proteins_dict[key])
+    all_real_proteins += '\n'
+print(all_real_proteins)
