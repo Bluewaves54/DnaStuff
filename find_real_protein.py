@@ -1,3 +1,27 @@
+import time
+import requests
+
+
+def get_protein_name(protein_seq):
+    api = 'https://blast.ncbi.nlm.nih.gov/' \
+          'Blast.cgi?CMD=Put&QUERY={}&PROGRAM=blastp&DATABASE=pdb'.format(protein_seq)
+
+    r = requests.get(api)
+
+    r = r.text
+    index1 = r.find('<input name="RID" value="')
+    index2 = r.find('" type="hidden" />')
+    rid = r[index1 + 25:index2]
+    while True:
+        try:
+            output = requests.get('https://blast.ncbi.nlm.nih.gov/'
+                                  'Blast.cgi?CMD=Get&RID={}&FORMAT_TYPE=JSON2_S'.format(rid))
+            output = output.json()
+            return output['BlastOutput2'][0]['report']['results']['search']['hits'][0]['description'][0]['title']
+        except:
+            time.sleep(2)
+
+
 def list_to_string(lst):
     string = ''
     for item in lst:
@@ -75,6 +99,7 @@ def find_real_protein(x):
             count = 0
 
     real_proteins = {}
+    protein_sequences = {}
     list_to_string(protein_seq)
     for i in range(0, len(end_indices)):
         pro_start_index = end_indices[i] - lengths[i]
@@ -85,20 +110,28 @@ def find_real_protein(x):
         p = (list_to_string(protein_seq[pro_start_index:pro_end_index]), '(', str(seq_length),
              ' characters long at ', str(dna_start_index), ', ', str(dna_stop_index), ')')
         protein = ''.join(p)
+        raw_p = list_to_string(protein_seq[pro_start_index:pro_end_index])
         real_proteins[dna_start_index] = protein
+        protein_sequences[dna_start_index] = raw_p
+    return real_proteins, protein_sequences
 
-    return real_proteins
 
-
+protein_sequences_dict = {}
 real_proteins_dict = {}
-rpd_sorted = sorted(real_proteins_dict)
 for start in range(0, 3):
-    merge(find_real_protein(start), real_proteins_dict)
-
+    merge(find_real_protein(start)[0], real_proteins_dict)
+    merge(find_real_protein(start)[1], protein_sequences_dict)
 rpd_sorted = sorted(real_proteins_dict)
+psd_sorted = sorted(protein_sequences_dict)
 
+print(protein_sequences_dict)
 all_real_proteins = ''
 for key in rpd_sorted:
     all_real_proteins += (real_proteins_dict[key])
     all_real_proteins += '\n'
 print(all_real_proteins)
+
+for i in protein_sequences_dict:
+    print(protein_sequences_dict[i])
+    print(get_protein_name(protein_sequences_dict[i]))
+    print('__________________________________________________________________')
