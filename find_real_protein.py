@@ -124,14 +124,13 @@ for start in range(0, 3):
 rpd_sorted = sorted(real_proteins_dict)
 psd_sorted = sorted(protein_sequences_dict)
 
-print(protein_sequences_dict)
 all_real_proteins = ''
 for key in rpd_sorted:
     all_real_proteins += (real_proteins_dict[key])
     all_real_proteins += '\n'
-print(all_real_proteins)
-
-for i in protein_sequences_dict:
+print(all_real_proteins, '\n')
+print('===========================================================================================')
+for i in psd_sorted:
     print(protein_sequences_dict[i])
     print(get_protein_name(protein_sequences_dict[i]))
     print('__________________________________________________________________')
