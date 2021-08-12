@@ -4,7 +4,7 @@ import requests
 
 def get_protein_name(protein_seq):
     api = 'https://blast.ncbi.nlm.nih.gov/' \
-          'Blast.cgi?CMD=Put&QUERY={}&PROGRAM=blastp&DATABASE=pdb'.format(protein_seq)
+          'Blast.cgi?CMD=Put&QUERY={}&PROGRAM=blastp&MEGABLAST=on&DATABASE=pdb'.format(protein_seq)
 
     r = requests.get(api)
 
@@ -12,6 +12,7 @@ def get_protein_name(protein_seq):
     index1 = r.find('<input name="RID" value="')
     index2 = r.find('" type="hidden" />')
     rid = r[index1 + 25:index2]
+    count = 0
     while True:
         try:
             output = requests.get('https://blast.ncbi.nlm.nih.gov/'
@@ -19,7 +20,12 @@ def get_protein_name(protein_seq):
             output = output.json()
             return output['BlastOutput2'][0]['report']['results']['search']['hits'][0]['description'][0]['title']
         except:
+            # print('try again in 2 secs')
             time.sleep(2)
+            count += 2
+            if count > 400:
+                print('skipped')
+                break
 
 
 def list_to_string(lst):
@@ -59,7 +65,10 @@ acid_letters = amino_acids.keys()
 
 file = str(input('file directory: '))
 f = open(file).readlines()
-f.remove(f[0])
+for i in f[0]:
+    if i != 'A' or 'T' or 'G' or 'C':
+        f.remove(f[0])
+        break
 genome = ''
 for line in range(0, len(f) - 1):
     genome += f[line].rstrip()
@@ -129,7 +138,7 @@ for key in rpd_sorted:
     all_real_proteins += (real_proteins_dict[key])
     all_real_proteins += '\n'
 print(all_real_proteins, '\n')
-print('===========================================================================================')
+print('===========================================================================================\n')
 for i in psd_sorted:
     print(protein_sequences_dict[i])
     print(get_protein_name(protein_sequences_dict[i]))
