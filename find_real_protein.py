@@ -4,7 +4,7 @@ import requests
 
 def get_protein_name(protein_seq):
     api = 'https://blast.ncbi.nlm.nih.gov/' \
-          'Blast.cgi?CMD=Put&QUERY={}&PROGRAM=blastp&MEGABLAST=on&DATABASE=pdb'.format(protein_seq)
+          'Blast.cgi?CMD=Put&QUERY={}&PROGRAM=blastp&MEGABLAST=on&DATABASE=nr'.format(protein_seq)
 
     r = requests.get(api)
 
@@ -82,38 +82,33 @@ for t in range(0, len(genome) - 1):
 
 def find_real_protein(x):
     protein_seq = []
-    start_index = x
-    end_index = x + 3
 
-    while start_index < len(genome):
-        if list_to_string(genome[start_index:end_index]) in stop_codons:
+    for x in range(0, len(genome), 3):
+        if list_to_string(genome[x:x + 3]) in stop_codons:
             protein_seq.append('*')
-        for i in acid_letters:
-            if list_to_string(genome[start_index:end_index]) in amino_acids[i]:
-                protein_seq.append(i)
-
-        start_index += 3
-        end_index += 3
+        for letter in acid_letters:
+            if list_to_string(genome[x:x + 3]) in amino_acids[letter]:
+                protein_seq.append(letter)
 
     end_indices, lengths = [], []
     count = 0
-    for i in range(0, len(protein_seq) - 1):
-        if protein_seq[i] != '*':
+    for codon in range(0, len(protein_seq) - 1):
+        if protein_seq[codon] != '*':
             count += 1
-        if protein_seq[i] == '*' and count < 100:
+        if protein_seq[codon] == '*' and count < 100:
             count = 0
-        if protein_seq[i] == '*' and count > 100:
-            end_indices.append(i)
+        if protein_seq[codon] == '*' and count > 100:
+            end_indices.append(codon)
             lengths.append(count)
             count = 0
 
     real_proteins = {}
     protein_sequences = {}
     list_to_string(protein_seq)
-    for i in range(0, len(end_indices)):
-        pro_start_index = end_indices[i] - lengths[i]
-        seq_length = lengths[i]
-        pro_end_index = end_indices[i]
+    for index in range(0, len(end_indices)):
+        pro_start_index = end_indices[index] - lengths[index]
+        seq_length = lengths[index]
+        pro_end_index = end_indices[index]
         dna_start_index = (pro_start_index * 3 + x)
         dna_stop_index = (pro_end_index * 3 + x)
         p = (list_to_string(protein_seq[pro_start_index:pro_end_index]), '(', str(seq_length),
